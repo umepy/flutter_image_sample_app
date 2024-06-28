@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hiragana_converter/app_notifier_provider.dart';
 
-class InputForm extends StatefulWidget {
+class InputForm extends ConsumerStatefulWidget {
   const InputForm({super.key});
 
   @override
-  State<InputForm> createState() => _InputFormState();
+  ConsumerState<InputForm> createState() => _InputFormState();
 }
 
-class _InputFormState extends State<InputForm> {
+class _InputFormState extends ConsumerState<InputForm> {
   final _formKey = GlobalKey<FormState>();
+  final _textEditingController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Form(
       key: _formKey,
       child: Column(
@@ -20,6 +25,7 @@ class _InputFormState extends State<InputForm> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextFormField(
+              controller: _textEditingController,
               maxLines: 5,
               decoration: const InputDecoration(hintText: '文章を入力してください'),
               validator: (value) {
@@ -32,14 +38,24 @@ class _InputFormState extends State<InputForm> {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {
-              final formState = _formKey.currentState;
-              formState?.validate();
+            onPressed: () async {
+              final formState = _formKey.currentState!;
+              if (!formState.validate()) {
+                return;
+              }
+              final sentence = _textEditingController.text;
+              await ref.read(appNotifierProvider.notifier).convert(sentence);
             },
-            child: Text('変換'),
+            child: const Text('変換'),
           ),
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _textEditingController.dispose();
+    super.dispose();
   }
 }
